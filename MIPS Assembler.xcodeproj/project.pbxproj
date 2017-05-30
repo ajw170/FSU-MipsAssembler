@@ -7,7 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		989B8A101EDDA1EE00E61F81 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 989B8A0F1EDDA1EE00E61F81 /* main.cpp */; };
+		98FF19E61EDDA20A00054363 /* union-sample2.c in Sources */ = {isa = PBXBuildFile; fileRef = 98FF19E51EDDA20A00054363 /* union-sample2.c */; };
+		98FF19EA1EDDA26100054363 /* assem-template.c in Sources */ = {isa = PBXBuildFile; fileRef = 98FF19E71EDDA26100054363 /* assem-template.c */; };
+		98FF19EB1EDDA26100054363 /* assem-template.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98FF19E81EDDA26100054363 /* assem-template.cpp */; };
+		98FF19EC1EDDA26100054363 /* sum.asm in Sources */ = {isa = PBXBuildFile; fileRef = 98FF19E91EDDA26100054363 /* sum.asm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -24,7 +27,10 @@
 
 /* Begin PBXFileReference section */
 		989B8A0C1EDDA1EE00E61F81 /* MIPS Assembler */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "MIPS Assembler"; sourceTree = BUILT_PRODUCTS_DIR; };
-		989B8A0F1EDDA1EE00E61F81 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		98FF19E51EDDA20A00054363 /* union-sample2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "union-sample2.c"; sourceTree = "<group>"; };
+		98FF19E71EDDA26100054363 /* assem-template.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "assem-template.c"; sourceTree = "<group>"; };
+		98FF19E81EDDA26100054363 /* assem-template.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "assem-template.cpp"; sourceTree = "<group>"; };
+		98FF19E91EDDA26100054363 /* sum.asm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm.asm; path = sum.asm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,7 +63,10 @@
 		989B8A0E1EDDA1EE00E61F81 /* MIPS Assembler */ = {
 			isa = PBXGroup;
 			children = (
-				989B8A0F1EDDA1EE00E61F81 /* main.cpp */,
+				98FF19E71EDDA26100054363 /* assem-template.c */,
+				98FF19E81EDDA26100054363 /* assem-template.cpp */,
+				98FF19E91EDDA26100054363 /* sum.asm */,
+				98FF19E51EDDA20A00054363 /* union-sample2.c */,
 			);
 			path = "MIPS Assembler";
 			sourceTree = "<group>";
@@ -119,7 +128,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				989B8A101EDDA1EE00E61F81 /* main.cpp in Sources */,
+				98FF19EB1EDDA26100054363 /* assem-template.cpp in Sources */,
+				98FF19E61EDDA20A00054363 /* union-sample2.c in Sources */,
+				98FF19EA1EDDA26100054363 /* assem-template.c in Sources */,
+				98FF19EC1EDDA26100054363 /* sum.asm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -246,6 +258,7 @@
 				989B8A151EDDA1EE00E61F81 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
