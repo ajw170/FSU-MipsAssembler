@@ -7,10 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		98FF19E61EDDA20A00054363 /* union-sample2.c in Sources */ = {isa = PBXBuildFile; fileRef = 98FF19E51EDDA20A00054363 /* union-sample2.c */; };
-		98FF19EA1EDDA26100054363 /* assem-template.c in Sources */ = {isa = PBXBuildFile; fileRef = 98FF19E71EDDA26100054363 /* assem-template.c */; };
-		98FF19EB1EDDA26100054363 /* assem-template.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98FF19E81EDDA26100054363 /* assem-template.cpp */; };
-		98FF19EC1EDDA26100054363 /* sum.asm in Sources */ = {isa = PBXBuildFile; fileRef = 98FF19E91EDDA26100054363 /* sum.asm */; };
+		98D6F9371EDE45590019886E /* assem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98D6F9361EDE45590019886E /* assem.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -27,6 +24,7 @@
 
 /* Begin PBXFileReference section */
 		989B8A0C1EDDA1EE00E61F81 /* MIPS Assembler */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "MIPS Assembler"; sourceTree = BUILT_PRODUCTS_DIR; };
+		98D6F9361EDE45590019886E /* assem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = assem.cpp; sourceTree = "<group>"; };
 		98FF19E51EDDA20A00054363 /* union-sample2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "union-sample2.c"; sourceTree = "<group>"; };
 		98FF19E71EDDA26100054363 /* assem-template.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "assem-template.c"; sourceTree = "<group>"; };
 		98FF19E81EDDA26100054363 /* assem-template.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "assem-template.cpp"; sourceTree = "<group>"; };
@@ -67,6 +65,7 @@
 				98FF19E81EDDA26100054363 /* assem-template.cpp */,
 				98FF19E91EDDA26100054363 /* sum.asm */,
 				98FF19E51EDDA20A00054363 /* union-sample2.c */,
+				98D6F9361EDE45590019886E /* assem.cpp */,
 			);
 			path = "MIPS Assembler";
 			sourceTree = "<group>";
@@ -128,10 +127,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				98FF19EB1EDDA26100054363 /* assem-template.cpp in Sources */,
-				98FF19E61EDDA20A00054363 /* union-sample2.c in Sources */,
-				98FF19EA1EDDA26100054363 /* assem-template.c in Sources */,
-				98FF19EC1EDDA26100054363 /* sum.asm in Sources */,
+				98D6F9371EDE45590019886E /* assem.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -181,6 +177,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CPLUSPLUSFLAGS = "-I$(PROJECT_DIR)/MIPS\\ Assembler";
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -221,6 +218,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_CPLUSPLUSFLAGS = "-I$(PROJECT_DIR)/MIPS\\ Assembler";
 				SDKROOT = macosx;
 			};
 			name = Release;

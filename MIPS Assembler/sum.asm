@@ -1,4 +1,6 @@
-	.text
+#This is a comment
+#This is another comment
+    .text
 	addu	$s0,$zero,$zero		# s0 = 0
 	addu	$s1,$zero,$zero		# s1 = 0
    	addiu	$v0,$zero,5		# v0 = read value 
@@ -7,7 +9,9 @@
 L1:	lw	$s2,n($gp)		# s2 = M[n]
 	slt	$t0,$s1,$s2		# if s1 >= s2 then
 	beq	$t0,$zero,L2		#    goto L2
-   	addiu	$v0,$zero,5		# v0 = read value 
+    div $t0,$t1
+mult $s0,$s1        # random comment
+   	addiu	$v0,$zero,5		# v0 = read value
 	syscall
 	addu	$s0,$s0,$v0		# s0 += v0
 	addiu	$s1,$s1,1		# s1 += 1
