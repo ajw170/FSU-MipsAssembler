@@ -23,6 +23,23 @@ const size_t MAXLINE = 80;
 const size_t MAXREG  = 5;
 const size_t MAXIMM  = 20;
 const size_t MAXTARG = 30;
+const size_t MAXLABEL = 30;
+
+//constant array for argument decoding
+const char * const argDecode[] = {"zero","at","v0","v1","a0","a1","a2","a3",
+                                    "t0","t1","t2","t3","t4","t5","t6","t7",
+                                    "s0","s1","s2","s3","s4","s5","s6","s7",
+                                    "t8","t9","k0","k1","gp","sp","fp","ra"};
+
+
+
+
+
+
+
+
+
+void skipLabel (char *, size_t); //function prototype for skipLabel
 
 int main()
 {
@@ -31,35 +48,46 @@ int main()
     char rd[MAXREG],rs[MAXREG],rt[MAXREG];
     char imm[MAXIMM];
     char targ[MAXTARG];
-    
-    
-    
-    //int testInt = 0;
-    //char testSequence[] = "Hello,World";
+    char label[MAXLABEL];
     
     //This section used for debugging only
     FILE * inFile; //opens file for stream
     inFile = fopen("sum.asm","r"); //open file for reading
     
-    
     FILE * streamObj = inFile;
     
     size_t lineNumber = 0;
     
-    //std::cout << sscanf(testSequence, "%[el,WoH]%[^d]", oper,rd);
-    //printf("%s%s\n\n\n", oper,rd);
+
     
     
     //begin read process
     while (fgets(line, MAXLINE, streamObj))
     {
+        //determine if line is a comment
         if (sscanf(line, " #%s", oper) == 1)
         {
             printf("Input line: %s", line);
             printf("parsed line: op:%10s\n",oper);
             printf("This was a comment line.  Discarding.\n\n");
+            continue; //skip to next iteration of loop
         }
-        else if (sscanf(line, " .%s", oper) == 1) //if directive is read ** will need to add more later
+        
+        
+        //first determine if line is a label
+        sscanf(line, "%s", label);              //reads first line until whitespace is hit and stores in label
+        size_t labelLength = strlen(label);     //determine length of first whitespace read
+        if (label[labelLength-1] == ':')
+        {
+            printf("%s is a label line",line);
+            skipLabel(line, labelLength);
+        }
+        
+        
+        
+        
+        
+        if (sscanf(line, " .%s", oper) == 1) //if directive is read ** will need to add more later
         {
             printf("Input line: %s", line);
             printf("parsed line: op:%10s\n",oper);
@@ -109,14 +137,7 @@ int main()
         }
         
         
-        
-        /* check if a 3-address R format instruction */
-      //  if (sscanf(line, "%s $%[^,],$%[^,],$%s", oper, rd, rs, rt) == 4) {
-      //      printf("input line: %s\n", line);
-      //      printf("parsed line: op:%10s rd:%5s rs:%5s rt:%5s\n",
-      //             oper, rd, rs, rt);
-      //  }
-        
+     
          
          
         /* you need to add other patterns for R,I,and J encoding */
@@ -127,3 +148,16 @@ int main()
         }
     } //end while
 }
+
+void skipLabel(char * line, size_t labelLength)
+{
+    size_t lineLength = strlen(line);
+    //overrite line without label for futher analysis
+    for (size_t i = labelLength; i < lineLength; ++i)
+    {
+        line[i-labelLength] = line[i]; //copy backwards
+    }
+    line[lineLength-labelLength] = '\0';//null chracter termination
+}
+
+

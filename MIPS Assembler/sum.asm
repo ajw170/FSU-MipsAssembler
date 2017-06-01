@@ -1,5 +1,6 @@
 #This is a comment
 #This is another comment
+#This: is a fake label test
     .text
 	addu	$s0,$zero,$zero		# s0 = 0
 	addu	$s1,$zero,$zero		# s1 = 0
