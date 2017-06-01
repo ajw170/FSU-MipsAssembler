@@ -22,6 +22,7 @@
 const size_t MAXLINE = 80;
 const size_t MAXREG  = 5;
 const size_t MAXIMM  = 20;
+const size_t MAXTARG = 30;
 
 int main()
 {
@@ -29,6 +30,12 @@ int main()
     char oper[MAXLINE];
     char rd[MAXREG],rs[MAXREG],rt[MAXREG];
     char imm[MAXIMM];
+    char targ[MAXTARG];
+    
+    
+    
+    //int testInt = 0;
+    //char testSequence[] = "Hello,World";
     
     //This section used for debugging only
     FILE * inFile; //opens file for stream
@@ -39,17 +46,13 @@ int main()
     
     size_t lineNumber = 0;
     
+    //std::cout << sscanf(testSequence, "%[el,WoH]%[^d]", oper,rd);
+    //printf("%s%s\n\n\n", oper,rd);
+    
+    
     //begin read process
     while (fgets(line, MAXLINE, streamObj))
     {
-        //check to see if the line is a label line
-        //if (sscanf(line,"%[^:]:hrllo",oper) == 1)
-        //{
-        //    printf("parsed line: oper:%10s\n",oper);
-        //    printf("Input line: %s\n", line);
-        //    printf("This was a label line.  Marking label and continuing to read.\n");
-        //}
-        /* check if the line is a comment line */
         if (sscanf(line, " #%s", oper) == 1)
         {
             printf("Input line: %s", line);
@@ -86,6 +89,25 @@ int main()
             printf("parsed line: op:%10s rs:%5s rt:%5s\n",oper,rs,rt);
             printf("This was a 2-argument R format instruction\n\n");
         }
+        else if (sscanf(line, "%s $%s", oper, rd) == 2)
+        {
+            printf("Input line: %s", line);
+            printf("parsed line: op:%10s rd:%5s\n",oper,rd);
+            printf("This was a 1-argument R format instruction\n\n");
+        }
+        else if (sscanf(line, "%s %s",oper,targ) == 2)
+        {
+            printf("Input line: %s", line);
+            printf("parsed line: op:%10s targ:%26s\n",oper,targ);
+            printf("This was a 1-argument J format instruction\n\n");
+        }
+        else if (sscanf(line,"%s",oper) == 1)
+        {
+            printf("Input line: %s", line);
+            printf("parsed line: op:%s\n",oper);
+            printf("This was a syscall\n\n");
+        }
+        
         
         
         /* check if a 3-address R format instruction */
