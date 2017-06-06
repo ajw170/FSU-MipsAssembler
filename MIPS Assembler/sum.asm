@@ -11,7 +11,7 @@ L1:	lw	$s2,n($gp)	           	# s2 = M[n]
 slt	$t0,$s1,$s2		# if s1 >= s2 then
 beq	$t0,$zero,L2		#    goto L2
 div $t0,$t1
-100:    mult       $s2,$s3             # hi
+mult $t2,$s3      #comment
 K2:   	addiu	$v0,$zero,5		# v0 = read value
 syscall
 addu	$s0,$s0,$v0		# s0 += v0

@@ -18,14 +18,14 @@
 #include <fstream>
 #include <stdio.h>
 #include <map>
-#include <string>
+#include <string.h>
 
 //typedef support for table mappings
 typedef std::pair<std::string,int> codePair;
 
 //constant for string length
 const size_t MAXLINE = 80;
-const size_t MAXREG  = 5;
+const size_t MAXREG  = 6;  //expanded due to possibility of comment issue
 const size_t MAXIMM  = 20;
 const size_t MAXTARG = 30;
 const size_t MAXLABEL = 30;
@@ -122,24 +122,16 @@ int main()
     
     FILE * streamObj = inFile;
 
+
+    //** Part 1 ** - Perform label collection and determine offsets
     
-    //begin of actual code
-    //conduct the read and store process for labels only!
     while (fgets(line, MAXLINE, streamObj))
     {
-        std::cout << "In data section at start of line?: " << isData << "\n";
-        std::cout << "Text line number?: " << textLineNumber << "\n";
-        printf("Input line: %s", line);
-        
-        
         //determine if line is a comment
         if (sscanf(line, " #%s", oper) == 1)
         {
-            printf("parsed line: op:%10s\n",oper);
-            printf("This was a comment line.  Discarding.\n\n");
             continue; //skip to next iteration of loop, do not increment
         }
-        
         
         //then determine if line is a label
         sscanf(line, "%s", label);              //reads first line until whitespace is hit and stores in label
@@ -148,101 +140,41 @@ int main()
         
         if (label[labelLength-1] == ':') //line is in fact a label
         {
-            printf("%s is a label line.\n",line);
+            skipLabel(line, labelLength); //remove the ':' from the label
+            
             if (!isData) //if we're on the text segment
             {
-                std::cout << "The before number is " << textLineNumber;
                 textOffset.insert(codePair(label,textLineNumber)); //insert the label into the label key
-                std::cout << "The text line number is " << textLineNumber <<"\n";
-                std::cout << "Just inserted " << label << " as having the textLineNumber " << textOffset[label] << "\n\n";
             }
-            else if (isData) //if we're on the data segment
+            else //if we're on the data segment
             {
                 dataOffset.insert(codePair(label,dataLineNumber)); //insert the label into the data label key
-                std::cout << "The data line number is " << dataLineNumber <<"\n";
-                std::cout << "Just inserted " << label << " as having the dataLineNumber " << dataOffset[label]  << "\n\n";
-                
             }
-            skipLabel(line, labelLength);
+            
         } // end - if label
         
         
         //Determine if the line is a directive and set appropriate flag
         if (sscanf(line, " .%s", oper) == 1)
         {
-            printf("parsed line: op:%10s\n",oper);
-            printf("This was a directive line.\n");
-            
             if (!strcmp(oper,"data")) //if directive = ".data"
             {
                 isData = 1;
-                std::cout << "This was a data directive.\n\n";
                 continue; //break out of loop, do not iterate
             }
-            else if (!strcmp(oper,"text")) //if directive = ".text"
+            if (!strcmp(oper,"text")) //if directive = ".text"
             {
-                
-                std::cout << "This was a text directive.\n\n";
                 continue; //break out of loop, do not iterate
             }
-            else if (!strcmp(oper,"word")) //if directive = ".word"
-            {
-                if (!isData) //if we're not in the data section
-                {
-                    std::cerr << " ** Error: attempted to declare word in text section.  Program failure.";
-                    exit(1);
-                }
-                
-                /*
-                unsigned int arg;
-                //scan the line for an argument after the word
-                sscanf(line, " .%s %d",oper,&arg); //store integer in arg
-                dataArray[dataLineNumber] = arg; //store argument here.
-                std::cout << "Just stored " << dataArray[dataLineNumber]
-                    << " in the data array at line number " << dataLineNumber <<"\n\n";
-                ++dataLineNumber; //increment the data section line number to the next FREE word.
-                 */
-                
-                std::cout << "Will deal with .word later!\n\n";
-            }
-            else if (!strcmp(oper,"space")) //if directive = ".space"
-            {
-                if (!isData) //if we're not in the data section
-                {
-                    std::cerr << " ** Error: attempted to declare space in text section.  Program failure.";
-                    exit(1);
-                }
-                
-                /*
-                unsigned int arg;
-                //scan the line for an argument after the word
-                sscanf(line, " .%s %d",oper,&arg); //store argument in arg
-                
-                //add elements to the data array starting at present postiion of data line counter
-                for (size_t i = 0; i < arg; ++i)
-                {
-                    dataArray[dataLineNumber+i] = 0; //put a zero in the word.
-                }
-                dataLineNumber += arg; //increment dataLineNumber to next FREE word.
-                std::cout << "Created " << arg << " spaces in the dataArray filled with 0s.\n\n";
-                 */
-                
-                std::cout << "Will deal with .space later!\n";
-            }
-            else
-            {
-                std::cerr << "Invalid directive.  Program failure.";
-                exit(1);
-            }
-        }
-        else
-        {
-            std::cout << "We're only dealing with labels right now!\n\n";
         }
         
+        
+        //increment the line number counters
         if (!isData)
+        {
             ++textLineNumber;
-        else
+        }
+        else //if we're on data section
         {
             int arg;
             sscanf(line, " .%s %d",oper,&arg);
@@ -258,28 +190,13 @@ int main()
             }
             else
             {
-                std::cerr << "Something went wrong with the data labels!";
+                std::cerr << "Unsupported directive!\n";
             }
         }
         
-        std::cout << "In data section at end of line?: " << isData << "\n\n";
-        std::cout << "dataLineNumber is now: " << dataLineNumber << "\n\n";
-    }//end first pass while
-    
-    
-    
-    
-    
-    
+    } //end while label collection
     
     printLabelSummary(textOffset,dataOffset);
-    
-    
-    
-    
-    
-    
-    
     
     // **Part 2** - Re-read the file and ignore any labels; just parse the input into the appropriate format in the
     // instructions[] arrray.
@@ -287,12 +204,10 @@ int main()
     fseek(streamObj, 0, SEEK_SET); //return file pointer to the beginning
     textLineNumber = 0;  //reset text line
     dataLineNumber = 0;  //reset data line
-    isData         = 0;  //it is assumed we're back in the text section now
+    isData         = 0;  //reset flag to text section
     
     while (fgets(line, MAXLINE, streamObj))
     {
-        std::cout << "Beginning of loop\n";
-        std::cout << "Data line number is: " << dataLineNumber << "\n";
         //determine if line is a comment
         if (sscanf(line, " #%s", oper) == 1)
             continue;
@@ -308,9 +223,7 @@ int main()
         {
             if (!strcmp(oper,"data")) //if directive = ".data"
             {
-                std::cout << "we're here!\n";
                 isData = 1;
-                dataLineNumber = 0;
                 continue; //break out of loop, do not iterate
             }
             else if (!strcmp(oper,"text")) //if directive = ".text"
@@ -319,16 +232,10 @@ int main()
             }
             else if (!strcmp(oper,"word"))
             {
-                std::cout << "In word!\n";
-                std::cout << dataLineNumber << "\n";
                 int arg;
                 //scan the line for an argument after the word
                 sscanf(line, " .%s %d",oper,&arg); //store integer in arg
-                
-                
                 dataArray[dataLineNumber] = arg; //store argument here.
-                std::cout << "Just stored " << dataArray[dataLineNumber]
-                << " in the data array at line number " << dataLineNumber <<"\n\n";
                 ++dataLineNumber; //increment the data section line number to the next FREE word.
 
             }
@@ -344,17 +251,16 @@ int main()
                 dataArray[dataLineNumber+i] = 0; //put a zero in the word.
                 }
                 dataLineNumber += arg; //increment dataLineNumber to next FREE word.
-                std::cout << "Created " << arg << " spaces in the dataArray filled with 0s.\n\n";
             }
 
         }//end if-directive
 
         
         //if reached this point, then it is neither a comment nor a directive; it must be an instruction!
-        else if (sscanf(line, "%s $%[^,],$%[^,],$%s",oper,rd,rs,rt) == 4)
+        else if (sscanf(line, "%s $%[^, \n],$%[^, \n],$%s",oper,rd,rs,rt) == 4)
         {
             printf("parsed line: op:%10s rd:%5s rs:%5s rt:%5s\n",oper,rd,rs,rt);
-            printf("This was a 3-argument R format instruction\n\n");
+            printf("This was a 3-argument R format instruction\n");
             
             instructions[textLineNumber].u.rFormat.opcode = opcodeTable[oper];
             instructions[textLineNumber].u.rFormat.rs = argTable[rs];
@@ -363,13 +269,13 @@ int main()
             instructions[textLineNumber].u.rFormat.shamt = 0;
             instructions[textLineNumber].u.rFormat.funct = funcTable[oper];
             
-            std::cout << ("encode successful\n");
+            std::cout << ("encode successful\n\n");
             ++textLineNumber; //increment text line
             
         }
         else
         {
-            std::cout << "\n\nSkip for now!!\n\n";
+            std::cout << "Unsupported input type.\n\n";
         }
         
         
@@ -377,12 +283,13 @@ int main()
         
         
         
-    } //end second pass while
+    } //end instruction collection
         
     std::cout << "\n\n\n";
     for (size_t i = 0; i < textLineNumber; ++i)
     {
         printf("0x%x", instructions[i].u.encoding);
+        printf("\n");
     }
     
         
