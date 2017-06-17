@@ -19,19 +19,20 @@
 #include <stdio.h>
 #include <map>
 #include <string.h>
+#include <cctype>
 
 //typedef support for table mappings
 typedef std::pair<std::string,int> codePair;
 
 //constant for string length
 const size_t MAXLINE = 80;
-const size_t MAXREG  = 6;  //expanded due to possibility of comment issue
+const size_t MAXREG  = 5;  //expanded due to possibility of comment issue
 const size_t MAXIMM  = 20;
 const size_t MAXTARG = 30;
 const size_t MAXLABEL = 30;
 
 void skipLabel (char *, size_t); //function prototype for skipLabel
-void printLabelSummary(std::map<std::string,size_t> &, std::map<std::string,size_t> &); //function prototype for label debugging
+void printLabelSummary(std::map<std::string,unsigned int> &, std::map<std::string,unsigned int> &); //function prototype for label debugging
 
 int main()
 {
@@ -68,13 +69,13 @@ int main()
     // Note - "shamt" table would go here, but we're not dealing with shift operations in this assignment
     
     //Set up the "text line offset" table for later use -- will be used to store locations of labels for text segment
-    std::map <std::string,size_t> textOffset;
+    std::map <std::string,unsigned int> textOffset;
     
     //Set up the "data line offset" table for later use -- will be used to store locations of labels for data segment
-    std::map <std::string,size_t> dataOffset;
+    std::map <std::string,unsigned int> dataOffset;
     
     //Initialize array of unions containing structures of the various format instructions
-    struct {
+   /* struct {
         union {
             struct {
                 unsigned int opcode:6;
@@ -96,7 +97,50 @@ int main()
                 } jFormat;
             unsigned int encoding; //to hold data words and to output all lines
         } u;
+    }instructions[32768] = {0}; */
+    
+    struct {
+        union {
+            struct {
+                
+                
+                
+                
+                
+                unsigned int funct:6;
+                unsigned int shamt:5;
+                unsigned int rd:5;
+                unsigned int rt:5;
+                unsigned int rs:5;
+                unsigned int opcode:6;
+                
+            } rFormat;
+            struct{
+                
+               
+                
+                unsigned int imm:16;
+                unsigned int rt:5;
+                unsigned int rs:5;
+                unsigned int opcode:6;
+            } iFormat;
+            struct{
+                
+                unsigned int address:26;
+                unsigned int opcode:6;
+            } jFormat;
+            unsigned int encoding; //to hold data words and to output all lines
+        } u;
     }instructions[32768] = {0};
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     //Initialize array to hold data elements
     int dataArray[32768] = {0};
@@ -210,7 +254,7 @@ int main()
     {
         //determine if line is a comment
         if (sscanf(line, " #%s", oper) == 1)
-            continue;
+            continue; //skip loop
         
         //remove label if it exists
         sscanf(line, "%s", label);
@@ -273,6 +317,88 @@ int main()
             ++textLineNumber; //increment text line
             
         }
+        else if (sscanf(line, "%s $%[^, \n],$%[^, \n],%s", oper, rt, rs, imm) == 4)
+        {
+            printf("parsed line: op:%10s rt:%5s rs:%5s imm:%5s\n",oper,rt,rs,imm);
+            printf("This was a 3-argument I format instruction\n\n");
+            
+            instructions[textLineNumber].u.iFormat.opcode = opcodeTable[oper];
+            instructions[textLineNumber].u.iFormat.rt = argTable[rt];
+            instructions[textLineNumber].u.iFormat.rs = argTable[rs];
+            instructions[textLineNumber].u.iFormat.imm = textOffset[imm] - textLineNumber; //relative position, branch
+            
+            std::cout << ("encode successful\n\n");
+            ++textLineNumber; //increment text line
+        }
+        else if (sscanf(line, "%s $%[^,],%[^(]($%[^)])", oper, rt, imm, rs) == 4)
+        {
+            printf("parsed line: op:%10s rt:%5s imm:%5s rt:%5s\n",oper,rt,imm,rs);
+            printf("This was a 3-argument I format instruction\n\n");
+            
+            instructions[textLineNumber].u.iFormat.opcode = opcodeTable[oper];
+            instructions[textLineNumber].u.iFormat.rt = argTable[rt];
+            instructions[textLineNumber].u.iFormat.rs = argTable[rs];
+            instructions[textLineNumber].u.iFormat.imm = dataOffset[imm]; //relative position, data section
+            
+            std::cout << ("encode successful\n\n");
+            ++textLineNumber; //increment text line
+        }
+        else if (sscanf(line, "%s $%[^,],$%s", oper, rs, rt) == 3)
+        {
+            printf("parsed line: op:%10s rs:%5s rt:%5s\n",oper,rs,rt);
+            printf("This was a 2-argument R format instruction\n\n");
+            
+            instructions[textLineNumber].u.rFormat.opcode = opcodeTable[oper];
+            instructions[textLineNumber].u.rFormat.rs = argTable[rs];
+            instructions[textLineNumber].u.rFormat.rd = 0;
+            instructions[textLineNumber].u.rFormat.rt = argTable[rt];
+            instructions[textLineNumber].u.rFormat.shamt = 0;
+            instructions[textLineNumber].u.rFormat.funct = funcTable[oper];
+            
+            std::cout << ("encode successful\n\n");
+            ++textLineNumber; //increment text line
+        }
+        else if (sscanf(line, "%s $%s", oper, rd) == 2)
+        {
+            printf("parsed line: op:%10s rd:%5s\n",oper,rd);
+            printf("This was a 1-argument R format instruction\n\n"); //eg. jr $ra
+            
+            instructions[textLineNumber].u.rFormat.opcode = opcodeTable[oper];
+            instructions[textLineNumber].u.rFormat.rs = 0;
+            instructions[textLineNumber].u.rFormat.rd = argTable[rd];
+            instructions[textLineNumber].u.rFormat.rt = 0;
+            instructions[textLineNumber].u.rFormat.shamt = 0;
+            instructions[textLineNumber].u.rFormat.funct = funcTable[oper];
+            
+            std::cout << ("encode successful\n\n");
+            ++textLineNumber; //increment text line
+        }
+        else if (sscanf(line, "%s %s",oper,targ) == 2)
+        {
+            printf("parsed line: op:%10s targ:%26s\n",oper,targ);
+            printf("This was a 1-argument J format instruction\n\n");  //eg j L1
+            
+            instructions[textLineNumber].u.jFormat.opcode = opcodeTable[oper];
+            instructions[textLineNumber].u.jFormat.address = textOffset[targ];
+            
+            std::cout << "encode successful\n\n";
+            ++textLineNumber;
+        }
+        else if (sscanf(line,"%s",oper) == 1)
+        {
+            printf("parsed line: op:%s\n",oper);
+            printf("This was a syscall (O argument R-Format)\n\n");
+            
+            instructions[textLineNumber].u.rFormat.opcode = opcodeTable[oper];
+            instructions[textLineNumber].u.rFormat.rs = 0;
+            instructions[textLineNumber].u.rFormat.rd = 0;
+            instructions[textLineNumber].u.rFormat.rt = 0;
+            instructions[textLineNumber].u.rFormat.shamt = 0;
+            instructions[textLineNumber].u.rFormat.funct = funcTable[oper];
+            
+            std::cout << "encode successful\n\n";
+            ++textLineNumber;
+        }
         else
         {
             std::cout << "Unsupported input type.\n\n";
@@ -288,45 +414,47 @@ int main()
     std::cout << "\n\n\n";
     for (size_t i = 0; i < textLineNumber; ++i)
     {
-        printf("0x%x", instructions[i].u.encoding);
+        printf("%08x", instructions[i].u.encoding);
         printf("\n");
     }
+    
+    std::cout << "This is the end!";
     
         
         
         /*
         
-        else if (sscanf(line, "%s $%[^,],$%[^,],$%s",oper,rd,rs,rt) == 4)
+       // else if (sscanf(line, "%s $%[^,],$%[^,],$%s",oper,rd,rs,rt) == 4)
         {
             printf("parsed line: op:%10s rd:%5s rs:%5s rt:%5s\n",oper,rd,rs,rt);
             printf("This was a 3-argument R format instruction\n\n");
         }
-        else if (sscanf(line, "%s $%[^,],$%[^,],%s", oper, rt, rs, imm) == 4)
+       // else if (sscanf(line, "%s $%[^,],$%[^,],%s", oper, rt, rs, imm) == 4)
         {
             printf("parsed line: op:%10s rt:%5s rs:%5s imm:%5s\n",oper,rt,rs,imm);
             printf("This was a 3-argument I format instruction\n\n");
         }
-        else if (sscanf(line, "%s $%[^,],%[^(]($%[^)])", oper, rt, imm, rs) == 4)
+       // else if (sscanf(line, "%s $%[^,],%[^(]($%[^)])", oper, rt, imm, rs) == 4)
         {
             printf("parsed line: op:%10s rt:%5s imm:%5s rt:%5s\n",oper,rt,imm,rs);
             printf("This was a 3-argument I format instruction\n\n");
         }
-        else if (sscanf(line, "%s $%[^,],$%s", oper, rs, rt) == 3)
+       // else if (sscanf(line, "%s $%[^,],$%s", oper, rs, rt) == 3)
         {
             printf("parsed line: op:%10s rs:%5s rt:%5s\n",oper,rs,rt);
             printf("This was a 2-argument R format instruction\n\n");
         }
-        else if (sscanf(line, "%s $%s", oper, rd) == 2)
+       // else if (sscanf(line, "%s $%s", oper, rd) == 2)
         {
             printf("parsed line: op:%10s rd:%5s\n",oper,rd);
             printf("This was a 1-argument R format instruction\n\n");
         }
-        else if (sscanf(line, "%s %s",oper,targ) == 2)
+       // else if (sscanf(line, "%s %s",oper,targ) == 2)
         {
             printf("parsed line: op:%10s targ:%26s\n",oper,targ);
             printf("This was a 1-argument J format instruction\n\n");
         }
-        else if (sscanf(line,"%s",oper) == 1)
+       // else if (sscanf(line,"%s",oper) == 1)
         {
             printf("parsed line: op:%s\n",oper);
             printf("This was a syscall\n\n");
@@ -356,10 +484,10 @@ void skipLabel(char * line, size_t labelLength)
 }
 
 //used to debug label collection
-void printLabelSummary(std::map<std::string,size_t> & textOffset, std::map<std::string,size_t> & dataOffset)
+void printLabelSummary(std::map<std::string,unsigned int> & textOffset, std::map<std::string,unsigned int> & dataOffset)
 {
     std::cout  << "Text Labels:\n";
-    typedef std::map<std::string,size_t>::iterator MapIterator;
+    typedef std::map<std::string,unsigned int>::iterator MapIterator;
     
     for (MapIterator it = textOffset.begin(); it != textOffset.end(); ++it)
         std::cout << it->first << " => " << it->second << '\n';
