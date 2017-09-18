@@ -23,7 +23,7 @@
 #include <cctype>
 
 //typedef support for table mappings
-typedef std::pair<std::string,int> codePair;
+typedef std::pair<std::string,unsigned int> codePair;
 
 //constant for string length
 const size_t MAXLINE = 80;
@@ -31,6 +31,7 @@ const size_t MAXREG  = 5;  //expanded due to possibility of comment issue
 const size_t MAXIMM  = 20;
 const size_t MAXTARG = 30;
 const size_t MAXLABEL = 30;
+const size_t MAXPROGRAM = 32768;
 
 void skipLabel (char *, size_t); //function prototype for skipLabel
 void printLabelSummary(std::map<std::string,unsigned int> &, std::map<std::string,unsigned int> &); //function prototype for label debugging
@@ -76,75 +77,32 @@ int main()
     std::map <std::string,unsigned int> dataOffset;
     
     //Initialize array of unions containing structures of the various format instructions
-   /* struct {
-        union {
-            struct {
-                unsigned int opcode:6;
-                unsigned int rs:5;
-                unsigned int rt:5;
-                unsigned int rd:5;
-                unsigned int shamt:5;
-                unsigned int funct:6;
-                } rFormat;
-            struct{
-                unsigned int opcode:6;
-                unsigned int rs:5;
-                unsigned int rt:5;
-                unsigned int imm:16;
-                } iFormat;
-            struct{
-                unsigned int opcode:6;
-                unsigned int address:26;
-                } jFormat;
-            unsigned int encoding; //to hold data words and to output all lines
-        } u;
-    }instructions[32768] = {0}; */
-    
     struct {
-        union {
+        union   {
             struct {
-                
-                
-                
-                
-                
-                unsigned int funct:6;
-                unsigned int shamt:5;
-                unsigned int rd:5;
-                unsigned int rt:5;
-                unsigned int rs:5;
-                unsigned int opcode:6;
-                
-            } rFormat;
-            struct{
-                
-               
-                
-                unsigned int imm:16;
-                unsigned int rt:5;
-                unsigned int rs:5;
-                unsigned int opcode:6;
-            } iFormat;
-            struct{
-                
-                unsigned int address:26;
-                unsigned int opcode:6;
-            } jFormat;
+                        unsigned int funct:6;
+                        unsigned int shamt:5;
+                        unsigned int rd:5;
+                        unsigned int rt:5;
+                        unsigned int rs:5;
+                        unsigned int opcode:6;
+                    } rFormat;
+            struct  {
+                        unsigned int imm:16;
+                        unsigned int rt:5;
+                        unsigned int rs:5;
+                        unsigned int opcode:6;
+                    } iFormat;
+            struct  {
+                        unsigned int address:26;
+                        unsigned int opcode:6;
+                    } jFormat;
             unsigned int encoding; //to hold data words and to output all lines
-        } u;
-    }instructions[32768] = {0};
-    
-    
-    
-    
-    
-    
-    
-    
-    
+                } u;
+            } instructions[MAXPROGRAM] = {0}; //accessed by instructions.u.rFormat, etc.
     
     //Initialize array to hold data elements
-    int dataArray[32768] = {0};
+    int dataArray[MAXPROGRAM] = {0};
     
     //Initialize line counter
     unsigned int textLineNumber = 0;
@@ -156,16 +114,28 @@ int main()
     //Initialize containers to hold read in strings
     char line[MAXLINE]={0};
     char oper[MAXLINE] ={0};
-    char rd[MAXREG] = {0},rs[MAXREG] = {0},rt[MAXREG] = {0};
+    char rd[MAXREG] = {0}, rs[MAXREG] = {0}, rt[MAXREG] = {0};
     char imm[MAXIMM] = {0};
     char targ[MAXTARG] = {0};
     char label[MAXLABEL] = {0};
     
-    //This section used for debugging only
+    //Initialize char array to hold lines
+    char progInstructions[MAXPROGRAM][MAXLINE];  //two dimensional array to hold assembly lines.
+    
+    
+    //This section used for Xcode functionality
     FILE * inFile; //opens file for stream
     inFile = fopen("sum_modified.asm","r"); //open file for reading
-    
     FILE * streamObj = inFile;
+    
+    
+    //replace stramObj with std::cin for linprog functionality
+    size_t numLines = 0;
+    while (fgets(progInstructions[numLines],MAXLINE,streamObj))
+        ++numLines; //keep reading until end.
+    
+    //reset for rest of program
+    fseek(streamObj, 0, SEEK_SET);
 
 
     //** Part 1 ** - Perform label collection and determine offsets
@@ -459,57 +429,7 @@ int main()
         printf("\n");
     }
     
-    std::cout << "This is the end!";
-    
-        
-        
-        /*
-        
-       // else if (sscanf(line, "%s $%[^,],$%[^,],$%s",oper,rd,rs,rt) == 4)
-        {
-            printf("parsed line: op:%10s rd:%5s rs:%5s rt:%5s\n",oper,rd,rs,rt);
-            printf("This was a 3-argument R format instruction\n\n");
-        }
-       // else if (sscanf(line, "%s $%[^,],$%[^,],%s", oper, rt, rs, imm) == 4)
-        {
-            printf("parsed line: op:%10s rt:%5s rs:%5s imm:%5s\n",oper,rt,rs,imm);
-            printf("This was a 3-argument I format instruction\n\n");
-        }
-       // else if (sscanf(line, "%s $%[^,],%[^(]($%[^)])", oper, rt, imm, rs) == 4)
-        {
-            printf("parsed line: op:%10s rt:%5s imm:%5s rt:%5s\n",oper,rt,imm,rs);
-            printf("This was a 3-argument I format instruction\n\n");
-        }
-       // else if (sscanf(line, "%s $%[^,],$%s", oper, rs, rt) == 3)
-        {
-            printf("parsed line: op:%10s rs:%5s rt:%5s\n",oper,rs,rt);
-            printf("This was a 2-argument R format instruction\n\n");
-        }
-       // else if (sscanf(line, "%s $%s", oper, rd) == 2)
-        {
-            printf("parsed line: op:%10s rd:%5s\n",oper,rd);
-            printf("This was a 1-argument R format instruction\n\n");
-        }
-       // else if (sscanf(line, "%s %s",oper,targ) == 2)
-        {
-            printf("parsed line: op:%10s targ:%26s\n",oper,targ);
-            printf("This was a 1-argument J format instruction\n\n");
-        }
-       // else if (sscanf(line,"%s",oper) == 1)
-        {
-            printf("parsed line: op:%s\n",oper);
-            printf("This was a syscall\n\n");
-        }
-        else
-        {
-            printf("Something went wrong!\n\n\n");
-        }
-         */
-        
-    
-
-    
-    
+    //std::cout << "This is the end!";
 } // end main
 
 //used to remove the label from the line and continue processing
