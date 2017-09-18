@@ -1,7 +1,7 @@
 /*
     Andrew J Wood
     CDA3101 Project 2 - MIPS Assembler
-    May 30, 2017
+    September 14, 2017
  
     This program simulates a MIPS assembler by taking MIPS assembly code as the 
     input through a pipe redirect, and outputs the corresponding machine code in
@@ -17,6 +17,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
+#include <stdlib.h>
 #include <map>
 #include <string.h>
 #include <cctype>
@@ -186,13 +187,16 @@ int main()
         {
             skipLabel(line, labelLength); //remove the ':' from the label
             
+            char labelPair[MAXLABEL] = {0};
+            sscanf(label, " %[^:]", labelPair); //scan label, removing the ':', then add to labelPair for insert
+            
             if (!isData) //if we're on the text segment
             {
-                textOffset.insert(codePair(label,textLineNumber)); //insert the label into the label key
+                textOffset.insert(codePair(labelPair,textLineNumber)); //insert the label into the label key
             }
             else //if we're on the data segment
             {
-                dataOffset.insert(codePair(label,dataLineNumber)); //insert the label into the data label key
+                dataOffset.insert(codePair(labelPair,dataLineNumber)); //insert the label into the data label key
             }
             
         } // end - if label
@@ -319,21 +323,34 @@ int main()
         }
         else if (sscanf(line, "%s $%[^, \n],$%[^, \n],%s", oper, rt, rs, imm) == 4)
         {
+            //special case - must differentiate between addiu and non-add immediate
+            //also must differentiate between addiu and branch instructions
+            
             printf("parsed line: op:%10s rt:%5s rs:%5s imm:%5s\n",oper,rt,rs,imm);
             printf("This was a 3-argument I format instruction\n\n");
             
             instructions[textLineNumber].u.iFormat.opcode = opcodeTable[oper];
-            instructions[textLineNumber].u.iFormat.rt = argTable[rt];
-            instructions[textLineNumber].u.iFormat.rs = argTable[rs];
-            instructions[textLineNumber].u.iFormat.imm = textOffset[imm] - textLineNumber; //relative position, branch
             
-            std::cout << ("encode successful\n\n");
+            if (!strcmp(oper,"addiu")) //if strings are equal
+            {
+                instructions[textLineNumber].u.iFormat.rt = argTable[rt];
+                instructions[textLineNumber].u.iFormat.rs = argTable[rs];
+                instructions[textLineNumber].u.iFormat.imm = atoi(imm); //convert to integer
+            }
+            else // not an addiu instruction, either a beq or bne instruction
+            {
+                instructions[textLineNumber].u.iFormat.rt = argTable[rs]; //switch order
+                instructions[textLineNumber].u.iFormat.rs = argTable[rt]; //switch order
+                std::cout << "\n\n" << textOffset[imm]  << "\n\n";
+                instructions[textLineNumber].u.iFormat.imm = textOffset[imm] - textLineNumber; //relative position, branch
+            }
+            std::cout << ("encode successful for IMM\n\n");
             ++textLineNumber; //increment text line
         }
         else if (sscanf(line, "%s $%[^,],%[^(]($%[^)])", oper, rt, imm, rs) == 4)
         {
-            printf("parsed line: op:%10s rt:%5s imm:%5s rt:%5s\n",oper,rt,imm,rs);
-            printf("This was a 3-argument I format instruction\n\n");
+            printf("parsed line: op:%10s rt:%5s imm:%5s rs:%5s\n",oper,rt,imm,rs);
+            printf("This was a 3-argument I format instruction sw or lw\n\n");
             
             instructions[textLineNumber].u.iFormat.opcode = opcodeTable[oper];
             instructions[textLineNumber].u.iFormat.rt = argTable[rt];
@@ -412,9 +429,16 @@ int main()
     } //end instruction collection
         
     std::cout << "\n\n\n";
-    for (size_t i = 0; i < textLineNumber; ++i)
+    std::cout << textLineNumber << " "; //print number of instructions
+    std::cout << dataLineNumber << "\n";
+    for (size_t i = 0; i < textLineNumber; ++i) //print instructions
     {
         printf("%08x", instructions[i].u.encoding);
+        printf("\n");
+    }
+    for (size_t i = 0; i < dataLineNumber; ++i) //print data values
+    {
+        printf("%08x", dataArray[i]);
         printf("\n");
     }
     
