@@ -21,12 +21,7 @@ L2:	addu	$a0,$s0,$zero		# a0 = s0
 addiu	$v0,$zero,1		# print a0
 syscall
 addiu	$v0,$zero,10		# exit
-syscall
-syscall
-syscall
-syscall
-syscall
-syscall
+j   L1
 syscall
 .data
 .word	0

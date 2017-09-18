@@ -163,7 +163,7 @@ int main()
     
     //This section used for debugging only
     FILE * inFile; //opens file for stream
-    inFile = fopen("sum.asm","r"); //open file for reading
+    inFile = fopen("sum_modified.asm","r"); //open file for reading
     
     FILE * streamObj = inFile;
 
@@ -339,6 +339,11 @@ int main()
             }
             else // not an addiu instruction, either a beq or bne instruction
             {
+                if (textOffset.count(imm) == 0)
+                {
+                    std::cerr << "could not find label " << imm;
+                    exit(1); //exit program if label not found.
+                }
                 instructions[textLineNumber].u.iFormat.rt = argTable[rs]; //switch order
                 instructions[textLineNumber].u.iFormat.rs = argTable[rt]; //switch order
                 std::cout << "\n\n" << textOffset[imm]  << "\n\n";
@@ -351,6 +356,12 @@ int main()
         {
             printf("parsed line: op:%10s rt:%5s imm:%5s rs:%5s\n",oper,rt,imm,rs);
             printf("This was a 3-argument I format instruction sw or lw\n\n");
+            
+            if (dataOffset.count(imm) == 0)
+            {
+                std::cerr << "could not find label " << imm;
+                exit(1);
+            }
             
             instructions[textLineNumber].u.iFormat.opcode = opcodeTable[oper];
             instructions[textLineNumber].u.iFormat.rt = argTable[rt];
@@ -394,6 +405,12 @@ int main()
         {
             printf("parsed line: op:%10s targ:%26s\n",oper,targ);
             printf("This was a 1-argument J format instruction\n\n");  //eg j L1
+            
+            if (textOffset.count(targ) == 0)
+            {
+                std::cerr << "could not find label " << targ;
+                exit(1);
+            }
             
             instructions[textLineNumber].u.jFormat.opcode = opcodeTable[oper];
             instructions[textLineNumber].u.jFormat.address = textOffset[targ];
