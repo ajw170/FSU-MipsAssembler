@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <map>
 #include <string>
+#include <string.h>
 #include <cctype>
 
 //typedef support for table mappings
@@ -121,16 +122,16 @@ int main()
     //Initialize char array to hold lines
     char progInstructions[MAXPROGRAM][MAXLINE];  //two dimensional array to hold assembly lines.
     
-    /*
+    
     //This section used for Xcode functionality only - commented for linprog
     FILE * inFile; //opens file for stream
     inFile = fopen("sum.asm","r"); //open file for reading
     FILE * streamObj = inFile;
-     */
+    
     
     //replace stramObj with stdin for linprog functionality
     size_t numLines = 0;
-    while (fgets(progInstructions[numLines],MAXLINE,stdin))
+    while (fgets(progInstructions[numLines],MAXLINE,streamObj))
         ++numLines; //keep reading until end.
     
     //** Part 1 ** - Perform label collection and determine offsets
@@ -197,7 +198,6 @@ int main()
         {
             int arg;
             sscanf(line, " .%s %d",oper,&arg);
-            //std::cout << "oper read was: " << oper << "\n";
             if (!strcmp(oper,"word"))
             {
                 //need something here to handle possibility of commas
@@ -227,7 +227,6 @@ int main()
             }
             else if (!strcmp(oper,"space"))
             {
-                //std::cout << "Arg read was: " << arg << "\n";
                 dataLineNumber += arg;
             }
             else
@@ -239,8 +238,10 @@ int main()
         ++labelIter;
     } //end while program instructions
 
-    //Used to debug labels - turned off for project submission
-    //printLabelSummary(textOffset,dataOffset);
+    /*
+    Used to debug labels - turned off for project submission
+    printLabelSummary(textOffset,dataOffset);
+     */
     
     // **Part 2** - Re-read the file and ignore any labels; just parse the input into the appropriate format in the
     // instructions[] arrray.
@@ -334,8 +335,8 @@ int main()
 
         }//end if-directive
 
-        
         //if reached this point, then it is neither a comment nor a directive; it must be an instruction!
+        
         else if (sscanf(line, "%s $%[^, \n] , $%[^, \n] , $%s",oper,rd,rs,rt) == 4)
         {
             //printf("parsed line: op:%10s rd:%5s rs:%5s rt:%5s\n",oper,rd,rs,rt);
@@ -348,7 +349,6 @@ int main()
             instructions[textLineNumber].u.rFormat.shamt = 0;
             instructions[textLineNumber].u.rFormat.funct = funcTable[oper];
             
-            //std::cout << ("encode successful\n\n");
             ++textLineNumber; //increment text line
             
         }
@@ -377,10 +377,8 @@ int main()
                 }
                 instructions[textLineNumber].u.iFormat.rt = argTable[rs]; //switch order
                 instructions[textLineNumber].u.iFormat.rs = argTable[rt]; //switch order
-                //std::cout << "\n\n" << textOffset[imm]  << "\n\n";
                 instructions[textLineNumber].u.iFormat.imm = textOffset[imm] - textLineNumber; //relative position, branch
             }
-            //std::cout << ("encode successful for IMM\n\n");
             ++textLineNumber; //increment text line
         }
         else if (sscanf(line, "%s $%[^, ] , %[^( ] ( $%[^) ])", oper, rt, imm, rs) == 4)
@@ -418,7 +416,6 @@ int main()
                 instructions[textLineNumber].u.iFormat.imm = dataOffset[imm]; //relative position, data section
             }
             
-            //std::cout << ("encode successful\n\n");
             ++textLineNumber; //increment text line
         }
         else if (sscanf(line, "%s $%[^,],$%s", oper, rs, rt) == 3)
@@ -433,7 +430,6 @@ int main()
             instructions[textLineNumber].u.rFormat.shamt = 0;
             instructions[textLineNumber].u.rFormat.funct = funcTable[oper];
             
-            //std::cout << ("encode successful\n\n");
             ++textLineNumber; //increment text line
         }
         else if (sscanf(line, "%s $%s", oper, rd) == 2)
@@ -448,7 +444,6 @@ int main()
             instructions[textLineNumber].u.rFormat.shamt = 0;
             instructions[textLineNumber].u.rFormat.funct = funcTable[oper];
             
-            //std::cout << ("encode successful\n\n");
             ++textLineNumber; //increment text line
         }
         else if (sscanf(line, "%s %s",oper,targ) == 2)
@@ -465,7 +460,6 @@ int main()
             instructions[textLineNumber].u.jFormat.opcode = opcodeTable[oper];
             instructions[textLineNumber].u.jFormat.address = textOffset[targ];
             
-            //std::cout << "encode successful\n\n";
             ++textLineNumber;
         }
         else if (sscanf(line,"%s",oper) == 1)
@@ -480,7 +474,6 @@ int main()
             instructions[textLineNumber].u.rFormat.shamt = 0;
             instructions[textLineNumber].u.rFormat.funct = funcTable[oper];
             
-            //std::cout << "encode successful\n\n";
             ++textLineNumber;
         }
         else
@@ -490,8 +483,7 @@ int main()
         
         ++instIter;
     } //end while instIter
-        
-    //std::cout << "\n\n\n";
+    
     std::cout << textLineNumber << " "; //print number of instructions
     std::cout << dataLineNumber << "\n";
     for (size_t i = 0; i < textLineNumber; ++i) //print instructions
@@ -504,8 +496,6 @@ int main()
         printf("%08x", dataArray[i]);
         printf("\n");
     }
-    
-    //std::cout << "This is the end!";
 } // end main
 
 //used to remove the label from the line and continue processing
@@ -520,7 +510,7 @@ void skipLabel(char * line, size_t labelLength)
     line[lineLength-labelLength] = '\0';//null chracter termination
 }
 
-//used to debug label collection
+//used to debug label collection - not used in linprog version
 void printLabelSummary(std::map<std::string,unsigned int> & textOffset, std::map<std::string,unsigned int> & dataOffset)
 {
     std::cout  << "Text Labels:\n";
