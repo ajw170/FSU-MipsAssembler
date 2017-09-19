@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <map>
-#include <string.h>
+#include <string>
 #include <cctype>
 
 //typedef support for table mappings
@@ -121,21 +121,18 @@ int main()
     //Initialize char array to hold lines
     char progInstructions[MAXPROGRAM][MAXLINE];  //two dimensional array to hold assembly lines.
     
-    
     /*
-    //This section used for Xcode functionality
+    //This section used for Xcode functionality only - commented for linprog
     FILE * inFile; //opens file for stream
     inFile = fopen("sum.asm","r"); //open file for reading
     FILE * streamObj = inFile;
      */
     
-    
-    //replace stramObj with std::cin for linprog functionality
+    //replace stramObj with stdin for linprog functionality
     size_t numLines = 0;
     while (fgets(progInstructions[numLines],MAXLINE,stdin))
         ++numLines; //keep reading until end.
     
-
     //** Part 1 ** - Perform label collection and determine offsets
     
     size_t labelIter = 0;
@@ -143,8 +140,6 @@ int main()
     {
         strcpy(line,progInstructions[labelIter]); //copy program instructions into line
     
-    //while (fgets(line, MAXLINE, streamObj))
-    //{
         //determine if line is a comment
         if (sscanf(line, " #%s", oper) == 1)
         {
@@ -202,7 +197,7 @@ int main()
         {
             int arg;
             sscanf(line, " .%s %d",oper,&arg);
-            std::cout << "oper read was: " << oper << "\n";
+            //std::cout << "oper read was: " << oper << "\n";
             if (!strcmp(oper,"word"))
             {
                 //need something here to handle possibility of commas
@@ -232,7 +227,7 @@ int main()
             }
             else if (!strcmp(oper,"space"))
             {
-                std::cout << "Arg read was: " << arg << "\n";
+                //std::cout << "Arg read was: " << arg << "\n";
                 dataLineNumber += arg;
             }
             else
@@ -241,19 +236,14 @@ int main()
             }
         }
         
-    //} //end while label collection
-        
         ++labelIter;
     } //end while program instructions
 
-    printLabelSummary(textOffset,dataOffset);
+    //Used to debug labels - turned off for project submission
+    //printLabelSummary(textOffset,dataOffset);
     
     // **Part 2** - Re-read the file and ignore any labels; just parse the input into the appropriate format in the
     // instructions[] arrray.
-    
-    /*
-    fseek(streamObj, 0, SEEK_SET); //return file pointer to the beginning
-     */
     
     textLineNumber  = 0;  //reset text line
     dataLineNumber  = 0;  //reset data line
@@ -264,10 +254,6 @@ int main()
     {
         strcpy(line,progInstructions[instIter]); //copy program instructions into line
     
-    
-    
-   // while (fgets(line, MAXLINE, streamObj))
-    //{
         //determine if line is a comment
         if (sscanf(line, " #%s", oper) == 1)
         {
@@ -352,8 +338,8 @@ int main()
         //if reached this point, then it is neither a comment nor a directive; it must be an instruction!
         else if (sscanf(line, "%s $%[^, \n] , $%[^, \n] , $%s",oper,rd,rs,rt) == 4)
         {
-            printf("parsed line: op:%10s rd:%5s rs:%5s rt:%5s\n",oper,rd,rs,rt);
-            printf("This was a 3-argument R format instruction\n");
+            //printf("parsed line: op:%10s rd:%5s rs:%5s rt:%5s\n",oper,rd,rs,rt);
+            //printf("This was a 3-argument R format instruction\n");
             
             instructions[textLineNumber].u.rFormat.opcode = opcodeTable[oper];
             instructions[textLineNumber].u.rFormat.rs = argTable[rs];
@@ -362,7 +348,7 @@ int main()
             instructions[textLineNumber].u.rFormat.shamt = 0;
             instructions[textLineNumber].u.rFormat.funct = funcTable[oper];
             
-            std::cout << ("encode successful\n\n");
+            //std::cout << ("encode successful\n\n");
             ++textLineNumber; //increment text line
             
         }
@@ -371,8 +357,8 @@ int main()
             //special case - must differentiate between addiu and non-add immediate
             //also must differentiate between addiu and branch instructions
             
-            printf("parsed line: op:%10s rt:%5s rs:%5s imm:%5s\n",oper,rt,rs,imm);
-            printf("This was a 3-argument I format instruction\n\n");
+            //printf("parsed line: op:%10s rt:%5s rs:%5s imm:%5s\n",oper,rt,rs,imm);
+            //printf("This was a 3-argument I format instruction\n\n");
             
             instructions[textLineNumber].u.iFormat.opcode = opcodeTable[oper];
             
@@ -391,16 +377,16 @@ int main()
                 }
                 instructions[textLineNumber].u.iFormat.rt = argTable[rs]; //switch order
                 instructions[textLineNumber].u.iFormat.rs = argTable[rt]; //switch order
-                std::cout << "\n\n" << textOffset[imm]  << "\n\n";
+                //std::cout << "\n\n" << textOffset[imm]  << "\n\n";
                 instructions[textLineNumber].u.iFormat.imm = textOffset[imm] - textLineNumber; //relative position, branch
             }
-            std::cout << ("encode successful for IMM\n\n");
+            //std::cout << ("encode successful for IMM\n\n");
             ++textLineNumber; //increment text line
         }
         else if (sscanf(line, "%s $%[^, ] , %[^( ] ( $%[^) ])", oper, rt, imm, rs) == 4)
         {
-            printf("parsed line: op:%10s rt:%5s imm:%5s rs:%5s\n",oper,rt,imm,rs);
-            printf("This was a 3-argument I format instruction sw or lw\n\n");
+            //printf("parsed line: op:%10s rt:%5s imm:%5s rs:%5s\n",oper,rt,imm,rs);
+            //printf("This was a 3-argument I format instruction sw or lw\n\n");
             
             bool isNumber = 0;
             if (dataOffset.count(imm) == 0) //label could not be found
@@ -432,13 +418,13 @@ int main()
                 instructions[textLineNumber].u.iFormat.imm = dataOffset[imm]; //relative position, data section
             }
             
-            std::cout << ("encode successful\n\n");
+            //std::cout << ("encode successful\n\n");
             ++textLineNumber; //increment text line
         }
         else if (sscanf(line, "%s $%[^,],$%s", oper, rs, rt) == 3)
         {
-            printf("parsed line: op:%10s rs:%5s rt:%5s\n",oper,rs,rt);
-            printf("This was a 2-argument R format instruction\n\n");
+            //printf("parsed line: op:%10s rs:%5s rt:%5s\n",oper,rs,rt);
+            //printf("This was a 2-argument R format instruction\n\n");
             
             instructions[textLineNumber].u.rFormat.opcode = opcodeTable[oper];
             instructions[textLineNumber].u.rFormat.rs = argTable[rs];
@@ -447,13 +433,13 @@ int main()
             instructions[textLineNumber].u.rFormat.shamt = 0;
             instructions[textLineNumber].u.rFormat.funct = funcTable[oper];
             
-            std::cout << ("encode successful\n\n");
+            //std::cout << ("encode successful\n\n");
             ++textLineNumber; //increment text line
         }
         else if (sscanf(line, "%s $%s", oper, rd) == 2)
         {
-            printf("parsed line: op:%10s rd:%5s\n",oper,rd);
-            printf("This was a 1-argument R format instruction\n\n"); //eg. jr $ra
+            //printf("parsed line: op:%10s rd:%5s\n",oper,rd);
+            //printf("This was a 1-argument R format instruction\n\n"); //eg. jr $ra
             
             instructions[textLineNumber].u.rFormat.opcode = opcodeTable[oper];
             instructions[textLineNumber].u.rFormat.rs = 0;
@@ -462,13 +448,13 @@ int main()
             instructions[textLineNumber].u.rFormat.shamt = 0;
             instructions[textLineNumber].u.rFormat.funct = funcTable[oper];
             
-            std::cout << ("encode successful\n\n");
+            //std::cout << ("encode successful\n\n");
             ++textLineNumber; //increment text line
         }
         else if (sscanf(line, "%s %s",oper,targ) == 2)
         {
-            printf("parsed line: op:%10s targ:%26s\n",oper,targ);
-            printf("This was a 1-argument J format instruction\n\n");  //eg j L1
+            //printf("parsed line: op:%10s targ:%26s\n",oper,targ);
+            //printf("This was a 1-argument J format instruction\n\n");  //eg j L1
             
             if (textOffset.count(targ) == 0)
             {
@@ -479,13 +465,13 @@ int main()
             instructions[textLineNumber].u.jFormat.opcode = opcodeTable[oper];
             instructions[textLineNumber].u.jFormat.address = textOffset[targ];
             
-            std::cout << "encode successful\n\n";
+            //std::cout << "encode successful\n\n";
             ++textLineNumber;
         }
         else if (sscanf(line,"%s",oper) == 1)
         {
-            printf("parsed line: op:%s\n",oper);
-            printf("This was a syscall (O argument R-Format)\n\n");
+            //printf("parsed line: op:%s\n",oper);
+            //printf("This was a syscall (O argument R-Format)\n\n");
             
             instructions[textLineNumber].u.rFormat.opcode = opcodeTable[oper];
             instructions[textLineNumber].u.rFormat.rs = 0;
@@ -494,7 +480,7 @@ int main()
             instructions[textLineNumber].u.rFormat.shamt = 0;
             instructions[textLineNumber].u.rFormat.funct = funcTable[oper];
             
-            std::cout << "encode successful\n\n";
+            //std::cout << "encode successful\n\n";
             ++textLineNumber;
         }
         else
@@ -505,9 +491,7 @@ int main()
         ++instIter;
     } //end while instIter
         
-//    } //end while instruction collection
-        
-    std::cout << "\n\n\n";
+    //std::cout << "\n\n\n";
     std::cout << textLineNumber << " "; //print number of instructions
     std::cout << dataLineNumber << "\n";
     for (size_t i = 0; i < textLineNumber; ++i) //print instructions
