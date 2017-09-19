@@ -1,6 +1,6 @@
 #This is a comment
 #This is another comment
-#This: is a fake label test hdsfjhsdjfhsdjhfdsjhfjdshfjdshfjsdhfjdshfjsdhfjsdhfjsdhfjsdhfjsdhfjsdhfjsdhfsdjhfsdj
+#This: is a fake label test
 .text
 addu	$s0,$zero,$zero		# s0 = 0
 addu	$s1,$zero,$zero		# s1 = 0
@@ -25,7 +25,7 @@ j   L1
 syscall
 .data
 .word	0
-n:  .word 5
+n:  .word 5,   6,   7
 ll: .space 2
     .word 6
     .space 3

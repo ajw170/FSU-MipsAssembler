@@ -125,7 +125,7 @@ int main()
     
     //This section used for Xcode functionality
     FILE * inFile; //opens file for stream
-    inFile = fopen("sum_modified.asm","r"); //open file for reading
+    inFile = fopen("sum.asm","r"); //open file for reading
     FILE * streamObj = inFile;
     
     
@@ -140,16 +140,22 @@ int main()
 
     //** Part 1 ** - Perform label collection and determine offsets
     
-    while (fgets(line, MAXLINE, streamObj))
+    size_t labelIter = 0;
+    while (progInstructions[labelIter][0] != '\0') //check to see if the line is empty
     {
+        strcpy(line,progInstructions[labelIter]); //copy program instructions into line
+    
+    //while (fgets(line, MAXLINE, streamObj))
+    //{
         //determine if line is a comment
         if (sscanf(line, " #%s", oper) == 1)
         {
+            ++labelIter;
             continue; //skip to next iteration of loop, do not increment
         }
         
         //then determine if line is a label
-        sscanf(line, "%s", label);              //reads first line until whitespace is hit and stores in label
+        sscanf(line, " %s", label);              //reads first line until whitespace is hit and stores in label
         size_t labelLength = strlen(label);     //determine length of first whitespace read
         
         
@@ -178,10 +184,12 @@ int main()
             if (!strcmp(oper,"data")) //if directive = ".data"
             {
                 isData = 1;
+                ++labelIter;
                 continue; //break out of loop, do not iterate
             }
             if (!strcmp(oper,"text")) //if directive = ".text"
             {
+                ++labelIter;
                 continue; //break out of loop, do not iterate
             }
         }
@@ -199,7 +207,30 @@ int main()
             std::cout << "oper read was: " << oper << "\n";
             if (!strcmp(oper,"word"))
             {
-                ++dataLineNumber;
+                //need something here to handle possibility of commas
+                while(1)
+                {
+                    size_t lineIter = 0;
+                    while (line[lineIter] != ',' && line[lineIter] != '\0')
+                    {
+                        ++lineIter;
+                    }
+                    
+                    if (line[lineIter] == '\0')
+                        break; //finished, get out of loop
+                    
+                    //strip portion after comma
+                    size_t lineLength = strlen(line);
+                    ++lineIter; //move forward one position
+                    //overrite line without label for futher analysis
+                    for (size_t i = lineIter; i < lineLength; ++i)
+                    {
+                        line[i-lineIter] = line[i]; //copy backwards
+                    }
+                    line[lineLength-lineIter] = '\0';//null chracter termination
+                    ++dataLineNumber;
+                } //end while
+                ++dataLineNumber; //for first argument
             }
             else if (!strcmp(oper,"space"))
             {
@@ -212,23 +243,36 @@ int main()
             }
         }
         
-    } //end while label collection
-    
+    //} //end while label collection
+        
+        ++labelIter;
+    } //end while program instructions
+
     printLabelSummary(textOffset,dataOffset);
     
     // **Part 2** - Re-read the file and ignore any labels; just parse the input into the appropriate format in the
     // instructions[] arrray.
     
     fseek(streamObj, 0, SEEK_SET); //return file pointer to the beginning
-    textLineNumber = 0;  //reset text line
-    dataLineNumber = 0;  //reset data line
-    isData         = 0;  //reset flag to text section
+    textLineNumber  = 0;  //reset text line
+    dataLineNumber  = 0;  //reset data line
+    isData          = 0;  //reset flag to text section
     
-    while (fgets(line, MAXLINE, streamObj))
+    size_t instIter = 0; //instruction iterator
+    while (progInstructions[instIter][0] != '\0') //check to see if the line is empty
     {
+        strcpy(line,progInstructions[instIter]); //copy program instructions into line
+    
+    
+    
+   // while (fgets(line, MAXLINE, streamObj))
+    //{
         //determine if line is a comment
         if (sscanf(line, " #%s", oper) == 1)
+        {
+            ++instIter;
             continue; //skip loop
+        }
         
         //remove label if it exists
         sscanf(line, "%s", label);
@@ -242,19 +286,49 @@ int main()
             if (!strcmp(oper,"data")) //if directive = ".data"
             {
                 isData = 1;
+                ++instIter;
                 continue; //break out of loop, do not iterate
             }
             else if (!strcmp(oper,"text")) //if directive = ".text"
             {
+                ++instIter;
                 continue; //break out of loop, do not iterate
             }
             else if (!strcmp(oper,"word"))
             {
                 int arg;
                 //scan the line for an argument after the word
-                sscanf(line, " .%s %d",oper,&arg); //store integer in arg
+                sscanf(line, " .%s %d",oper,&arg); //store integer in arg, first argument
                 dataArray[dataLineNumber] = arg; //store argument here.
                 ++dataLineNumber; //increment the data section line number to the next FREE word.
+                
+                //strip scanned part of line up to comma
+                
+                while(1)
+                {
+                    size_t lineIter = 0;
+                    while (line[lineIter] != ',' && line[lineIter] != '\0')
+                    {
+                        ++lineIter;
+                    }
+                
+                    if (line[lineIter] == '\0')
+                        break; //finished, get out of loop
+                
+                    //strip portion after comma
+                    size_t lineLength = strlen(line);
+                    ++lineIter; //move forward one position
+                    //overrite line without label for futher analysis
+                    for (size_t i = lineIter; i < lineLength; ++i)
+                    {
+                        line[i-lineIter] = line[i]; //copy backwards
+                    }
+                    line[lineLength-lineIter] = '\0';//null chracter termination
+                
+                    sscanf(line, " %d",&arg);
+                    dataArray[dataLineNumber] = arg;
+                    ++dataLineNumber;
+                } //end while
 
             }
             else if (!strcmp(oper,"space"))
@@ -275,7 +349,7 @@ int main()
 
         
         //if reached this point, then it is neither a comment nor a directive; it must be an instruction!
-        else if (sscanf(line, "%s $%[^, \n],$%[^, \n],$%s",oper,rd,rs,rt) == 4)
+        else if (sscanf(line, "%s $%[^, \n] , $%[^, \n] , $%s",oper,rd,rs,rt) == 4)
         {
             printf("parsed line: op:%10s rd:%5s rs:%5s rt:%5s\n",oper,rd,rs,rt);
             printf("This was a 3-argument R format instruction\n");
@@ -291,7 +365,7 @@ int main()
             ++textLineNumber; //increment text line
             
         }
-        else if (sscanf(line, "%s $%[^, \n],$%[^, \n],%s", oper, rt, rs, imm) == 4)
+        else if (sscanf(line, "%s $%[^, \n] , $%[^, \n] , %s", oper, rt, rs, imm) == 4)
         {
             //special case - must differentiate between addiu and non-add immediate
             //also must differentiate between addiu and branch instructions
@@ -322,21 +396,40 @@ int main()
             std::cout << ("encode successful for IMM\n\n");
             ++textLineNumber; //increment text line
         }
-        else if (sscanf(line, "%s $%[^,],%[^(]($%[^)])", oper, rt, imm, rs) == 4)
+        else if (sscanf(line, "%s $%[^, ] , %[^( ] ( $%[^) ])", oper, rt, imm, rs) == 4)
         {
             printf("parsed line: op:%10s rt:%5s imm:%5s rs:%5s\n",oper,rt,imm,rs);
             printf("This was a 3-argument I format instruction sw or lw\n\n");
             
-            if (dataOffset.count(imm) == 0)
+            bool isNumber = 0;
+            if (dataOffset.count(imm) == 0) //label could not be found
             {
-                std::cerr << "could not find label " << imm;
-                exit(1);
+                //check to see if label could be a number
+                size_t immLength = strlen(imm);
+                for (size_t i = 0; i < immLength; ++i)
+                {
+                    if (!isdigit(imm[i]))
+                    {
+                        isNumber = 0; // it's not a number
+                        std::cerr << "could not find label " << imm;
+                        exit(1); // leave program
+                    }
+                    ++i; //increment i
+                }
+                isNumber = 1; //it is a number!
             }
             
             instructions[textLineNumber].u.iFormat.opcode = opcodeTable[oper];
             instructions[textLineNumber].u.iFormat.rt = argTable[rt];
             instructions[textLineNumber].u.iFormat.rs = argTable[rs];
-            instructions[textLineNumber].u.iFormat.imm = dataOffset[imm]; //relative position, data section
+            if (isNumber)
+            {
+                instructions[textLineNumber].u.iFormat.imm = atoi(imm); //use the actual number as the offset
+            }
+            else
+            {
+                instructions[textLineNumber].u.iFormat.imm = dataOffset[imm]; //relative position, data section
+            }
             
             std::cout << ("encode successful\n\n");
             ++textLineNumber; //increment text line
@@ -408,12 +501,10 @@ int main()
             std::cout << "Unsupported input type.\n\n";
         }
         
+        ++instIter;
+    } //end while instIter
         
-        
-        
-        
-        
-    } //end instruction collection
+//    } //end while instruction collection
         
     std::cout << "\n\n\n";
     std::cout << textLineNumber << " "; //print number of instructions
