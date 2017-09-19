@@ -15,7 +15,6 @@
 */
 
 #include <iostream>
-#include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <map>
@@ -123,20 +122,19 @@ int main()
     char progInstructions[MAXPROGRAM][MAXLINE];  //two dimensional array to hold assembly lines.
     
     
+    /*
     //This section used for Xcode functionality
     FILE * inFile; //opens file for stream
     inFile = fopen("sum.asm","r"); //open file for reading
     FILE * streamObj = inFile;
+     */
     
     
     //replace stramObj with std::cin for linprog functionality
     size_t numLines = 0;
-    while (fgets(progInstructions[numLines],MAXLINE,streamObj))
+    while (fgets(progInstructions[numLines],MAXLINE,stdin))
         ++numLines; //keep reading until end.
     
-    //reset for rest of program
-    fseek(streamObj, 0, SEEK_SET);
-
 
     //** Part 1 ** - Perform label collection and determine offsets
     
@@ -253,7 +251,10 @@ int main()
     // **Part 2** - Re-read the file and ignore any labels; just parse the input into the appropriate format in the
     // instructions[] arrray.
     
+    /*
     fseek(streamObj, 0, SEEK_SET); //return file pointer to the beginning
+     */
+    
     textLineNumber  = 0;  //reset text line
     dataLineNumber  = 0;  //reset data line
     isData          = 0;  //reset flag to text section
