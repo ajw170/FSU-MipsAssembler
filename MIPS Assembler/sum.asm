@@ -52,7 +52,7 @@ L2:	addu	$a0,$s0,$zero		# a0 = s0
 n:	.word	0
     .word 5,6,7
     .space 3
-k:  .word 5
+k:  .word -5
 c:  .space 2
 p:  .word 99
     .space 1

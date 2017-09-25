@@ -122,16 +122,16 @@ int main()
     //Initialize char array to hold lines
     char progInstructions[MAXPROGRAM][MAXLINE];  //two dimensional array to hold assembly lines.
     
-    /*
+    
     //This section used for Xcode functionality only - commented for linprog
     FILE * inFile; //opens file for stream
     inFile = fopen("sum.asm","r"); //open file for reading
     FILE * streamObj = inFile;
-    */
+    
     
     //replace stramObj with stdin for linprog functionality
     size_t numLines = 0;
-    while (fgets(progInstructions[numLines],MAXLINE,stdin))
+    while (fgets(progInstructions[numLines],MAXLINE,streamObj))
         ++numLines; //keep reading until end.
     
     //** Part 1 ** - Perform label collection and determine offsets
